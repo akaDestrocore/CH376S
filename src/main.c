@@ -26,7 +26,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/logging/log.h>
-// #include "ch375.h"
 #include "ch37x_common.h"
 #include "hid_parser.h"
 #include "hid_mouse.h"
@@ -52,7 +51,7 @@ typedef struct {
     const char *name;
     struct gpio_dt_spec intGpio;
 
-    CH37X_Context_t *ch37xCtx;
+    struct ch375_Context_t *ch375Ctx;
     struct USB_Device_t usbDev;
     struct USBHID_Device_t hidDev;
     union {
@@ -83,7 +82,7 @@ static const char banner[] =
 " ██████  ██   ██  ██████  ███████    ██    ██   ██ ██ ██████  ███████ \n";
 
 /* Private function prototypes -----------------------------------------------*/
-static int initHostChipDevice(DeviceInput_t *pDevIn, const char *pName, 
+static int initCh375Device(DeviceInput_t *pDevIn, const char *pName, 
                             int usartIndex, const struct gpio_dt_spec *pIntGpio, 
                             uint8_t interfaceNum);
 static int openDeviceInput(DeviceInput_t *pDevIn);
@@ -140,12 +139,12 @@ int main(void)
 #endif
 
     // Initialize CH375 USB host controllers
-    ret = initHostChipDevice(&gDeviceInputs[0], "CH375A", CH37X_A_USART_INDEX, NULL, IFACE_MOUSE);
+    ret = initCh375Device(&gDeviceInputs[0], "CH375A", CH376S_A_USART_INDEX, NULL, IFACE_MOUSE);
     if (0 != ret) {
         return ret;
     }
 
-    ret = initHostChipDevice(&gDeviceInputs[1], "CH375B", CH37X_B_USART_INDEX, NULL, IFACE_KEYBOARD);
+    ret = initCh375Device(&gDeviceInputs[1], "CH375B", CH376S_B_USART_INDEX, NULL, IFACE_KEYBOARD);
     if (0 != ret) {
         return ret;
     }
@@ -212,7 +211,7 @@ int main(void)
 }
 
 /**
- * @brief Initialize CH37x USB host controller
+ * @brief Initialize CH375 USB host controller
  * @param pDevIn Pointer to device input structure
  * @param pName Device name for logging
  * @param usartIndex Hardware USART index
@@ -220,13 +219,14 @@ int main(void)
  * @param interfaceNum USB interface number (0=mouse, 1=keyboard)
  * @return 0 on success, negative error code otherwise
  */
-static int initHostChipDevice(DeviceInput_t *pDevIn, const char *pName, int usartIndex, const struct gpio_dt_spec *pIntGpio, uint8_t interfaceNum) {
+static int initCh375Device(DeviceInput_t *pDevIn, const char *pName, int usartIndex, const struct gpio_dt_spec *pIntGpio, uint8_t interfaceNum) {
     
     int ret = -1;
 
     pDevIn->name = pName;
     pDevIn->interfaceNum = interfaceNum;
     
+    // Store INT GPIO (NULL for polling mode)
     if (NULL != pIntGpio) {
         pDevIn->intGpio = *pIntGpio;
     } else {
@@ -238,20 +238,19 @@ static int initHostChipDevice(DeviceInput_t *pDevIn, const char *pName, int usar
     pDevIn->reportIntervalMs = DEFAULT_REPORT_INTERVAL_MS;
     pDevIn->isConnected = false;
 
-    ret = ch37x_hwInitManual(pName, usartIndex, pIntGpio, 
-                            CH37X_DEFAULT_BAUDRATE, &pDevIn->ch37xCtx);
+    ret = ch37x_hwInitManual(pName, usartIndex, pIntGpio, CH37X_DEFAULT_BAUDRATE, &pDevIn->ch375Ctx);
     if (ret < 0) {
         LOG_ERR("[ FAILED ] %s: Hardware init failed: %d", pName, ret);
         return ret;
     }
 
-    ret = ch37x_hostInit(pDevIn->ch37xCtx, CH37X_WORK_BAUDRATE);
+    ret = ch375_hostInit(pDevIn->ch375Ctx, CH37X_WORK_BAUDRATE);
     if (CH37X_HOST_SUCCESS != ret) {
-        LOG_ERR("[ FAILED ] %s: Host init failed: %d", pName, ret);
+        LOG_ERR("[ FAILED ] %s: CH375 host init failed: %d", pName, ret);
         return -EIO;
     }
 
-    ret = ch37x_hwSetBaudrate(pDevIn->ch37xCtx, CH37X_WORK_BAUDRATE);
+    ret = ch37x_hwSetBaudrate(pDevIn->ch375Ctx, CH37X_WORK_BAUDRATE);
     if (ret < 0) {
         LOG_ERR("%s: Baudrate switch failed: %d", pName, ret);
         return ret;
@@ -272,10 +271,10 @@ static int openDeviceInput(DeviceInput_t *pDevIn) {
 
     LOG_INF("%s: Opening USB device...", pDevIn->name);
 
-    ret = ch375_hostUdevOpen(pDevIn->ch37xCtx, &pDevIn->usbDev);
-    if (CH375_HOST_SUCCESS != ret) {
+    ret = ch375_hostUdevOpen(pDevIn->ch375Ctx, &pDevIn->usbDev);
+    if (CH37X_HOST_SUCCESS != ret) {
         LOG_ERR("%s: Failed to open USB device: %d", pDevIn->name, ret);
-        return CH375_HOST_ERROR;
+        return CH37X_HOST_ERROR;
     }
 
     LOG_INF("[ OK ] %s: USB device opened (VID:PID = %04X:%04X)",
@@ -340,12 +339,12 @@ static void waitAllDevicesConnect(void) {
             }
 
             // 500ms timeout
-            ret = ch375_hostWaitDeviceConnect(pDevIn->ch37xCtx, 500);
-            if (CH375_HOST_SUCCESS == ret) {
+            ret = ch375_hostWaitDeviceConnect(pDevIn->ch375Ctx, 500);
+            if (CH37X_HOST_SUCCESS == ret) {
                 LOG_INF("[ OK ] %s: Device connected", pDevIn->name);
                 pDevIn->isConnected = true;
             } 
-            else if (CH375_HOST_ERROR == ret) {
+            else if (CH37X_HOST_ERROR == ret) {
                 LOG_ERR("[ FAILED ] %s: Error waiting for device", pDevIn->name);
                 allConnected = false;
             } else {
@@ -621,14 +620,14 @@ static void closeAllDevices(void) {
 
         if (USBHID_TYPE_MOUSE == pDevIn->hidDev.hid_type) {
             hidMouse_Close(&pDevIn->mouse);
-        }
-         
+        } 
+        
         else if (USBHID_TYPE_KEYBOARD == pDevIn->hidDev.hid_type) {
             hidKeyboard_Close(&pDevIn->keyboard);
         }
 
         USBHID_close(&pDevIn->hidDev);
-        ch37x_hostUdevClose(&pDevIn->usbDev);
+        ch375_hostUdevClose(&pDevIn->usbDev);
 
         pDevIn->isConnected = false;
     }

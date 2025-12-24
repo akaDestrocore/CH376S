@@ -35,7 +35,7 @@ static struct USB_Device_t udev;
 static void test_setup(void *f)
 {
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&gCtx), CH37X_SUCCESS);
+    zassert_equal(mock_ch375Init(&gCtx), CH375_SUCCESS);
     
     // Initialize minimal USB device structure
     memset(&udev, 0, sizeof(udev));
@@ -114,7 +114,7 @@ ZTEST(ch375_transfers, test_control_transfer_get_device_descriptor)
                 USB_SREQ_GET_DESCRIPTOR, USB_DESC_DEVICE << 8, 0, buffer, sizeof(buffer), &actualLen, 5000);
     
     // Verify
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_equal(actualLen, 18);
     zassert_mem_equal(buffer, pDeviceDesc, 18);
     
@@ -140,7 +140,7 @@ ZTEST(ch375_transfers, test_control_transfer_set_address)
                                                                 USB_SREQ_SET_ADDRESS, 5, 0, NULL, 0, NULL, 5000);
     
     // Verify
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_ISSUE_TKN_X));
 }
 
@@ -156,13 +156,13 @@ ZTEST(ch375_transfers, test_control_transfer_stall)
     
     // Simulate STALL on DATA stage
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_STALL));
-    mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_STALL));
+    mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_STALL));
+    mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_STALL));
     
     int ret = ch375_hostControlTransfer(&udev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_DEVICE), 
                         USB_SREQ_GET_DESCRIPTOR, USB_DESC_DEVICE << 8, 0, buffer, sizeof(buffer), NULL, 5000 );
     
-    zassert_equal(ret, CH375_HOST_STALL, "Should detect STALL");
+    zassert_equal(ret, CH37X_HOST_STALL, "Should detect STALL");
 }
 
 /* ========================================================================
@@ -177,13 +177,13 @@ ZTEST(ch375_transfers, test_control_transfer_disconnect)
     
     // Simulate disconnect on DATA stage
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_DISCONNECT);
-    mock_ch375QueueStatus(CH375_USB_INT_DISCONNECT);
+    mock_ch375QueueStatus(CH37X_USB_INT_DISCONNECT);
+    mock_ch375QueueStatus(CH37X_USB_INT_DISCONNECT);
     
     int ret = ch375_hostControlTransfer( &udev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_DEVICE), 
                         USB_SREQ_GET_DESCRIPTOR, USB_DESC_DEVICE << 8, 0, buffer, sizeof(buffer), NULL, 5000 );
     
-    zassert_equal(ret, CH375_HOST_DEV_DISCONNECT);
+    zassert_equal(ret, CH37X_HOST_DEV_DISCONNECT);
 }
 
 /* ========================================================================
@@ -228,7 +228,7 @@ ZTEST(ch375_transfers, test_control_transfer_multi_packet)
     int ret = ch375_hostControlTransfer( &udev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_DEVICE), 
             USB_SREQ_GET_DESCRIPTOR, USB_DESC_CONFIGURATION << 8, 0, buffer, sizeof(buffer), &actualLen, 5000);
     
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_equal(actualLen, 96, "Should receive 64 + 32 bytes");
     zassert_mem_equal(buffer, packet1, 64);
     zassert_mem_equal(buffer + 64, packet2, 32);
@@ -260,7 +260,7 @@ ZTEST(ch375_transfers, test_bulk_transfer_in_basic)
     
     int ret = ch375_hostBulkTransfer(&udev, 0x81, buffer, sizeof(buffer), &actualLen, 5000);
     
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_equal(actualLen, 64);
     zassert_mem_equal(buffer, testData, 64);
     zassert_true(udev.interfaces[0].endpoints[0].data_toggle);
@@ -284,8 +284,8 @@ ZTEST(ch375_transfers, test_bulk_transfer_nak_then_success)
     
     // First attempt: NAK
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_NAK));
-    mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_NAK));
+    mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_NAK));
+    mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_NAK));
     
     // Second attempt: Success
     mock_ch375QueueStatus(0x00);
@@ -296,7 +296,7 @@ ZTEST(ch375_transfers, test_bulk_transfer_nak_then_success)
     
     int ret = ch375_hostBulkTransfer(&udev, 0x81, buffer, sizeof(buffer), &actualLen, 5000);
     
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_equal(actualLen, 4);
     zassert_mem_equal(buffer, testData, 4);
 }
@@ -319,13 +319,13 @@ ZTEST(ch375_transfers, test_bulk_transfer_nak_timeout)
     // Keep responding with NAK
     for (int attempt = 0; attempt < 10; attempt++) {
         mock_ch375QueueStatus(0x00);
-        mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_NAK));
-        mock_ch375QueueStatus(CH375_PID2STATUS(USB_PID_NAK));
+        mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_NAK));
+        mock_ch375QueueStatus(CH37X_PID2STATUS(USB_PID_NAK));
     }
     
     int ret = ch375_hostBulkTransfer(&udev, 0x81, buffer, sizeof(buffer), &actualLen, 5);
     
-    zassert_equal(ret, CH375_HOST_TIMEOUT);
+    zassert_equal(ret, CH37X_HOST_TIMEOUT);
     zassert_equal(actualLen, 0);
 }
 
@@ -351,7 +351,7 @@ ZTEST(ch375_transfers, test_bulk_transfer_out)
     
     int ret = ch375_hostBulkTransfer(&udev, 0x01, data, sizeof(data), &actualLen, 5000);
     
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_equal(actualLen, 4);
 }
 
@@ -371,7 +371,7 @@ ZTEST(ch375_transfers, test_clear_stall)
     
     int ret = ch375_hostClearStall(&udev, 0x81);
     
-    zassert_equal(ret, CH375_HOST_SUCCESS);
+    zassert_equal(ret, CH37X_HOST_SUCCESS);
     zassert_false(udev.interfaces[0].endpoints[0].data_toggle,
                   "Toggle should be reset to DATA0");
 }

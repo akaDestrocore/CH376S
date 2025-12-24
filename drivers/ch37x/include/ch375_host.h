@@ -58,12 +58,12 @@ extern "C" {
  * @brief CH375 Host Error Codes
  */
 typedef enum {
-    CH375_HOST_SUCCESS          = 0,
-    CH375_HOST_ERROR            = -1,
-    CH375_HOST_PARAM_INVALID    = -2,
-    CH375_HOST_TIMEOUT          = -3,
-    CH375_HOST_DEV_DISCONNECT   = -4,
-    CH375_HOST_STALL            = -5,
+    CH37X_HOST_SUCCESS          = 0,
+    CH37X_HOST_ERROR            = -1,
+    CH37X_HOST_PARAM_INVALID    = -2,
+    CH37X_HOST_TIMEOUT          = -3,
+    CH37X_HOST_DEV_DISCONNECT   = -4,
+    CH37X_HOST_STALL            = -5,
     CH375_HOST_IO_ERROR         = -6,
     CH375_HOST_NOT_SUPPORT      = -7,
     CH375_HOST_ALLOC_FAILED     = -8,

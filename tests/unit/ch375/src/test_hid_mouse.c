@@ -240,7 +240,7 @@ static const uint8_t LOGITECH_G305_2[148] = {
 static void test_setup(void *f)
 {
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&pCtx), CH37X_SUCCESS);
+    zassert_equal(mock_ch375Init(&pCtx), CH375_SUCCESS);
     
     memset(&gUdev, 0x00, sizeof(gUdev));
     gUdev.ctx = pCtx;

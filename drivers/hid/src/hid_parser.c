@@ -555,7 +555,7 @@ static void set_idle(struct USB_Device_t *pUdev, uint8_t interfaceNum, uint8_t d
         USB_TYPE_CLASS, USB_RECIP_INTERFACE), HID_SET_IDLE, (duration << 8) | 
         reportID, interfaceNum, NULL, 0, NULL, TRANSFER_TIMEOUT);
 
-    if (CH375_HOST_SUCCESS != ret) {
+    if (CH37X_HOST_SUCCESS != ret) {
         LOG_ERR("Set idle failed: %d", ret);
     }
 }
@@ -588,7 +588,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
         ret = ch375_hostControlTransfer(pUdev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_INTERFACE), 
                 USB_SREQ_GET_DESCRIPTOR, (type << 8) | 0, interfaceNum, pBuff, 64, &actualLen, TRANSFER_TIMEOUT);
         
-        if (CH375_HOST_SUCCESS == ret && actualLen > 0) {
+        if (CH37X_HOST_SUCCESS == ret && actualLen > 0) {
             LOG_INF("Initial read got %d bytes", actualLen);
             
             // If we got less than requested then - that's all 
@@ -607,7 +607,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
                 USB_SREQ_GET_DESCRIPTOR, (type << 8) | 0, interfaceNum, pBuff + actualLen, remainingLen, 
                                                                                     &additionalLen, TRANSFER_TIMEOUT);
                 
-                if (CH375_HOST_SUCCESS == ret && additionalLen > 0) {
+                if (CH37X_HOST_SUCCESS == ret && additionalLen > 0) {
                     LOG_INF(" Got additional %d bytes, total %d", additionalLen, actualLen + additionalLen);
                     return USBHID_SUCCESS;
                 }
@@ -623,7 +623,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
     ret = ch375_hostControlTransfer(pUdev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_INTERFACE), 
             USB_SREQ_GET_DESCRIPTOR, (type << 8) | 0, interfaceNum, pBuff, len, &actualLen, TRANSFER_TIMEOUT);
     
-    if (CH375_HOST_SUCCESS == ret && actualLen > 0) {
+    if (CH37X_HOST_SUCCESS == ret && actualLen > 0) {
         LOG_INF(" STANDARD/INTERFACE succeeded: %d bytes", actualLen);
         return USBHID_SUCCESS;
     }
@@ -633,7 +633,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
     ret = ch375_hostControlTransfer(pUdev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_CLASS, USB_RECIP_INTERFACE), 
     USB_SREQ_GET_DESCRIPTOR, (type << 8) | 0, interfaceNum, pBuff, len, &actualLen, TRANSFER_TIMEOUT);
     
-    if (CH375_HOST_SUCCESS == ret && actualLen > 0) {
+    if (CH37X_HOST_SUCCESS == ret && actualLen > 0) {
         return USBHID_SUCCESS;
     }
     
@@ -641,7 +641,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
     ret = ch375_hostControlTransfer(pUdev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_CLASS, USB_RECIP_INTERFACE),0x06, 
                                 (0x22 << 8) | 0, interfaceNum, pBuff, len, &actualLen, TRANSFER_TIMEOUT);
     
-    if (CH375_HOST_SUCCESS == ret && actualLen > 0) {
+    if (CH37X_HOST_SUCCESS == ret && actualLen > 0) {
         LOG_INF(" Explicit request succeeded: %d bytes", actualLen);
         return USBHID_SUCCESS;
     }
@@ -650,7 +650,7 @@ static int hid_get_class_descriptor(struct USB_Device_t *pUdev, uint8_t interfac
     ret = ch375_hostControlTransfer(pUdev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_CLASS, USB_RECIP_INTERFACE), HID_GET_REPORT, 
                 (HID_REPORT_TYPE_INPUT << 8) | 0, interfaceNum, pBuff, len > 64 ? 64 : len, &actualLen, TRANSFER_TIMEOUT);
     
-    if (CH375_HOST_SUCCESS == ret && actualLen > 0) {
+    if (CH37X_HOST_SUCCESS == ret && actualLen > 0) {
         LOG_INF(" GET_REPORT succeeded: %d bytes", actualLen);
         return USBHID_SUCCESS;
     }
@@ -671,7 +671,7 @@ static int set_report(struct USB_Device_t *pUdev, uint8_t interfaceNum, uint8_t 
     HID_SET_REPORT, (reportType << 8) | reportID, interfaceNum, &dataFragment, sizeof(dataFragment), 
                                                                             &actualLen, TRANSFER_TIMEOUT);
         
-    if (CH375_HOST_SUCCESS != ret) {
+    if (CH37X_HOST_SUCCESS != ret) {
         LOG_WRN("Set report failed (this may be normal for some devices): %d", ret);
         return USBHID_SUCCESS;
     }
@@ -707,19 +707,15 @@ static int usbhid_read(struct USBHID_Device_t *pDev, uint8_t *pBuff, int len, in
         return USBHID_ERROR;
     }
     
-#ifdef USE_CH376S
     // Set retry mode for INT transfers
-    ret = ch375_setRetry(pCtx, CH376S_RETRY_TIMES_ZERO);
-#else
-    ret = ch375_setRetry(pCtx, CH375_RETRY_TIMES_ZERO);
-#endif
+    ret = ch37x_setRetry(pCtx, CH37X_RETRY_TIMES_ZERO);
     if (CH37X_SUCCESS != ret) {
         return USBHID_IO_ERROR;
     }
 
 
     // Send IN token
-    ret = ch375_sendToken(pCtx, pEP->ep_addr, pEP->data_toggle, USB_PID_IN, &status);
+    ret = ch37x_sendToken(pCtx, pEP->ep_addr, pEP->data_toggle, USB_PID_IN, &status);
     if (CH37X_SUCCESS != ret) {
         return USBHID_IO_ERROR;
     }
@@ -727,7 +723,7 @@ static int usbhid_read(struct USBHID_Device_t *pDev, uint8_t *pBuff, int len, in
     // Check status
     if (CH37X_USB_INT_SUCCESS == status) {
         uint8_t readLen;
-        ret = ch375_readBlockData(pCtx, pBuff, len, &readLen);
+        ret = ch37x_readBlockData(pCtx, pBuff, len, &readLen);
         if (CH37X_SUCCESS != ret) {
             return USBHID_IO_ERROR;
         }
@@ -741,22 +737,16 @@ static int usbhid_read(struct USBHID_Device_t *pDev, uint8_t *pBuff, int len, in
         return USBHID_SUCCESS;
     }
 
-    if (CH375_PID2STATUS(USB_PID_NAK) == status) {
+    if (CH37X_PID2STATUS(USB_PID_NAK) == status) {
         if(NULL != pActualLen) {
             *pActualLen = 0;
         }
         return -EAGAIN;
     }
 
-#ifdef USE_CH376S
-    if (CH376S_USB_INT_DISCONNECT == status) {
+    if (CH37X_USB_INT_DISCONNECT == status) {
         return USBHID_NO_DEV;
     }
-#else
-    if (CH375_USB_INT_DISCONNECT == status) {
-        return USBHID_NO_DEV;
-    }
-#endif
 
     return USBHID_IO_ERROR;
 }

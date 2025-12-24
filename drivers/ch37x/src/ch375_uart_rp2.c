@@ -11,7 +11,7 @@
  * @date           2025
  * 
  * @details
- * Manual UART configuration using Pico SDK driversfor 9-bit mode operation.
+ * Manual UART configuration using STM32 LL drivers for 9-bit mode operation.
  * Bypasses Zephyr's UART API to enable command/data differentiation via
  * 9th bit. Implements clock setup, GPIO configuration, and baudrate management.
  * 
@@ -237,7 +237,7 @@ int ch375_rp2_hw_init(const char *name, int uart_idx, const struct gpio_dt_spec 
     flush_startup_transients(hw);
 
     ret = ch375_openContext(&pCtx, ch375_write_cmd_cb, ch375_write_data_cb, ch375_read_data_cb, ch375_query_int_cb, hw);
-    if (CH37X_SUCCESS != ret) {
+    if (CH375_SUCCESS != ret) {
         LOG_ERR("%s: ch375_openContext failed: %d", name, ret);
         k_free(hw);
         return -EIO;
@@ -450,7 +450,7 @@ static int ch375_write_cmd_cb(struct ch375_Context_t *pCtx, uint8_t cmd) {
         return CH375_ERROR;
     }
 
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int ch375_write_data_cb(struct ch375_Context_t *pCtx, uint8_t data)
@@ -469,7 +469,7 @@ static int ch375_write_data_cb(struct ch375_Context_t *pCtx, uint8_t data)
         return CH375_ERROR;
     }
     
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int ch375_read_data_cb(struct ch375_Context_t *pCtx, uint8_t *pData)
@@ -494,7 +494,7 @@ static int ch375_read_data_cb(struct ch375_Context_t *pCtx, uint8_t *pData)
     
     *pData = (uint8_t)(val & 0xFF);
     
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int ch375_query_int_cb(struct ch375_Context_t *pCtx)

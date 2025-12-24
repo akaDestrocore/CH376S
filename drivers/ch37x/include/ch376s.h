@@ -5,15 +5,14 @@
  * ╚═══════════════════════════════════════════════════════════════════════╝
  * 
  * @file           ch376s.h
- * @brief          CH376S USB host controller driver core interface
+ * @brief          CH376S USB host controller driver core interface (8-bit UART)
  * 
  * @author         destrocore
  * @date           2025
  * 
  * @details
- * Core driver for the CH376S USB host controller chip. Provides low-level
- * communication primitives for USB device enumeration and data transfer
- * over standard 8-bit UART using command sync bytes (0x57, 0xAB).
+ * Core driver for the CH376S USB host controller chip. Similar to CH375
+ * but uses standard 8-bit UART communication instead of 9-bit mode.
  * 
  * @copyright 
  * Copyright (c) 2025 akaDestrocore
@@ -31,20 +30,19 @@ extern "C" {
 #endif
 
 #include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
 #include <zephyr/drivers/usb/uhc.h>
-#include <zephyr/usb/usb_ch9.h>
+#include <zephyr/logging/log.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include "usb.h"
 
-#define CH376S_WAIT_INT_TIMEOUT_MS 2000
+#define WAIT_INT_TIMEOUT_MS 2000
 #define CH376S_CHECK_EXIST_DATA1 0x65
 #define CH376S_CHECK_EXIST_DATA2 ((uint8_t)~CH376S_CHECK_EXIST_DATA1)
 
 /**
- * @brief CH376S commands
+ * @brief CH376S commands (same as CH375)
  */
 typedef enum {
     CH376S_CMD_GET_IC_VER        =   0x01,
@@ -64,10 +62,10 @@ typedef enum {
     CH376S_CMD_RD_USB_DATA0      =   0x27,
     CH376S_CMD_RD_USB_DATA       =   0x28,
     CH376S_CMD_WR_USB_DATA7      =   0x2B,
-    CH376S_CMD_WR_HOST_DATA      =   0x2C,
     CH376S_CMD_GET_DESC          =   0x46,
     CH376S_CMD_ISSUE_TKN_X       =   0x4E,
     CH376S_CMD_ISSUE_TOKEN       =   0x4F,
+    /* State codes*/
     CH376S_CMD_RET_SUCCESS       =   0x51,
     CH376S_CMD_RET_FAILED        =   0x5F
 } ch376s_CMD_e;
@@ -93,6 +91,7 @@ typedef enum {
     CH376S_USB_INT_USB_READY     =   0x18
 } ch376s_USBHostInt_e;
 
+/* Macro for PID to status conversion */
 #define CH376S_PID2STATUS(x) ((x) | 0x20)
 
 /**
@@ -122,12 +121,12 @@ typedef enum {
 #define CH376S_DEFAULT_BAUDRATE  9600
 #define CH376S_WORK_BAUDRATE     115200
 
-// Forward declaration
+// Forward declaration of CH376S context structure
 struct ch376s_Context_t;
 
-// Function pointer types
-typedef int (*ch376s_writeByteFn_t)(struct ch376s_Context_t *pCtx, uint8_t byte);
-typedef int (*ch376s_readByteFn_t)(struct ch376s_Context_t *pCtx, uint8_t *byte);
+// Function pointer types for hardware abstraction (8-bit mode - no command/data differentiation)
+typedef int (*ch376s_writeDataFn_t)(struct ch376s_Context_t *pCtx, uint8_t data);
+typedef int (*ch376s_readDataFn_t)(struct ch376s_Context_t *pCtx, uint8_t *data);
 typedef int (*ch376s_queryIntFn_t)(struct ch376s_Context_t *pCtx);
 
 /**
@@ -135,8 +134,8 @@ typedef int (*ch376s_queryIntFn_t)(struct ch376s_Context_t *pCtx);
  */
 struct ch376s_Context_t {
     void *priv;
-    ch376s_writeByteFn_t write_byte;
-    ch376s_readByteFn_t read_byte;
+    ch376s_writeDataFn_t write_data;
+    ch376s_readDataFn_t read_data;
     ch376s_queryIntFn_t query_int;
     struct k_mutex lock;
 };
@@ -145,10 +144,10 @@ struct ch376s_Context_t {
  * @brief CH376S core functions
  */
 int ch376s_openContext(struct ch376s_Context_t **ppCtx,
-                       ch376s_writeByteFn_t write_byte,
-                       ch376s_readByteFn_t read_byte,
-                       ch376s_queryIntFn_t query_int,
-                       void *priv);
+                        ch376s_writeDataFn_t write_data,
+                        ch376s_readDataFn_t read_data,
+                        ch376s_queryIntFn_t query_int,
+                        void *priv);
 int ch376s_closeContext(struct ch376s_Context_t *pCtx);
 void *ch376s_getPriv(struct ch376s_Context_t *pCtx);
 
@@ -173,16 +172,17 @@ int ch376s_setDevSpeed(struct ch376s_Context_t *pCtx, uint8_t speed);
 int ch376s_setUSBAddr(struct ch376s_Context_t *pCtx, uint8_t addr);
 int ch376s_setRetry(struct ch376s_Context_t *pCtx, uint8_t times);
 int ch376s_sendToken(struct ch376s_Context_t *pCtx, uint8_t ep, bool tog,
-                    uint8_t pid, uint8_t *pStatus);
+                     uint8_t pid, uint8_t *pStatus);
 
 /**
  * @brief Data transfer commands
  */
-int ch376s_writeByte(struct ch376s_Context_t *pCtx, uint8_t byte);
-int ch376s_readByte(struct ch376s_Context_t *pCtx, uint8_t *pByte);
+int ch376s_writeCmd(struct ch376s_Context_t *pCtx, uint8_t cmd);
+int ch376s_writeData(struct ch376s_Context_t *pCtx, uint8_t data);
+int ch376s_readData(struct ch376s_Context_t *pCtx, uint8_t *pData);
 int ch376s_writeBlockData(struct ch376s_Context_t *pCtx, uint8_t *pBuff, uint8_t len);
 int ch376s_readBlockData(struct ch376s_Context_t *pCtx, uint8_t *pBuff, 
-                         uint8_t len, uint8_t *pActualLen);
+                          uint8_t len, uint8_t *pActualLen);
 
 #ifdef __cplusplus
 }

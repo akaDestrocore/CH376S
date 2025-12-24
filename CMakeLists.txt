@@ -23,6 +23,8 @@ target_sources(app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/src/hid_output.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_hid_proxy.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/input_patterns.c
+    # Common CH375 host layer (shared by both chips)
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch375_host.c
 )
 
 # Chip-specific UART implementation
@@ -36,15 +38,14 @@ if(USE_CH376S)
     
     # CH376S core files
     target_sources(app PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s_uart.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_host.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch376s.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch376s_uart.c
     )
     
     # CH376S only supports RP2040/RP2350
     if(CONFIG_SOC_RP2350A_M33 OR CONFIG_SOC_RP2040)
         target_sources(app PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s_uart_rp2.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch376s_uart_rp2.c
         )
         
         # PIO support
@@ -55,7 +56,7 @@ if(USE_CH376S)
             ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/common/hardware_claim/include
             ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/pico_base/include
         )
-        message(STATUS "Platform: ${BOARD} (CH376S with PIO)")
+        message(STATUS "Platform: ${BOARD} (CH376S with 8-bit PIO UART)")
     else()
         message(FATAL_ERROR "CH376S only supported on RP2040/RP2350 platforms!")
     endif()
@@ -67,15 +68,14 @@ else()
     
     # CH375 core files
     target_sources(app PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_host.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch375.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch375_uart.c
     )
     
     # Platform-specific UART implementation
     if(CONFIG_SOC_SERIES_STM32F4X)
         target_sources(app PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart_stm32.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch375_uart_stm32.c
         )
         
         # STM32 LL drivers
@@ -83,11 +83,11 @@ else()
             ${ZEPHYR_BASE}/modules/hal/stm32/stm32cube/stm32f4xx/drivers/include
             ${ZEPHYR_BASE}/modules/hal/stm32/stm32cube/stm32f4xx/soc
         )
-        message(STATUS "Platform: STM32F4 (CH375 with manual UART)")
+        message(STATUS "Platform: STM32F4 (CH375 with 9-bit UART)")
         
     elseif(CONFIG_SOC_RP2350A_M33 OR CONFIG_SOC_RP2040)
         target_sources(app PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart_rp2.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/src/ch375_uart_rp2.c
         )
         
         # PIO support
@@ -98,7 +98,7 @@ else()
             ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/common/hardware_claim/include
             ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/pico_base/include
         )
-        message(STATUS "Platform: ${BOARD} (CH375 with PIO)")
+        message(STATUS "Platform: ${BOARD} (CH375 with 9-bit PIO UART)")
     else()
         message(FATAL_ERROR "Unsupported platform for CH375!")
     endif()
@@ -108,8 +108,7 @@ endif()
 target_include_directories(app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch37x/include
 )
 
 message(STATUS "========================================")

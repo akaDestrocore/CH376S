@@ -60,7 +60,7 @@ static int mock_writeCmd(struct ch375_Context_t *ctx, uint8_t cmd)
         mockCmdHistory[mockCmdHistoryCount++] = cmd;
     }
     
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int mock_writeData(struct ch375_Context_t *ctx, uint8_t data)
@@ -74,7 +74,7 @@ static int mock_writeData(struct ch375_Context_t *ctx, uint8_t data)
         mockDataHistory[mockDataHistoryCount++] = data;
     }
     
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int mock_readData(struct ch375_Context_t *ctx, uint8_t *data)
@@ -89,11 +89,11 @@ static int mock_readData(struct ch375_Context_t *ctx, uint8_t *data)
         if (mockStatusHead != mockStatusTail) {
             *data = mockStatusQueue[mockStatusTail];
             mockStatusTail = (mockStatusTail + 1) % MOCK_STATUS_QUEUE_SIZE;
-            return CH37X_SUCCESS;
+            return CH375_SUCCESS;
         }
         // Return default status
         *data = mockDefaultStatus;
-        return CH37X_SUCCESS;
+        return CH375_SUCCESS;
     }
     
     // Regular response queue for other reads
@@ -104,7 +104,7 @@ static int mock_readData(struct ch375_Context_t *ctx, uint8_t *data)
     *data = mockRespQueue[mockRespTail];
     mockRespTail = (mockRespTail + 1) % 256;
     
-    return CH37X_SUCCESS;
+    return CH375_SUCCESS;
 }
 
 static int mock_queryInt(struct ch375_Context_t *ctx)

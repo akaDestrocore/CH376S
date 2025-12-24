@@ -157,7 +157,7 @@ static const struct usb_desc_header *find_descriptor_from_offset(
 static void test_setup(void *f) {
 
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&pCtx), CH37X_SUCCESS);
+    zassert_equal(mock_ch375Init(&pCtx), CH375_SUCCESS);
 }
 
 static void test_teardown(void *f) {

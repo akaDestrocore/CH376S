@@ -158,7 +158,7 @@ const uint8_t RAZER_BLACKWIDOW_V4_KEYBOARD[177] = {
 static void test_setup(void *f)
 {
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&pCtx), CH37X_SUCCESS);
+    zassert_equal(mock_ch375Init(&pCtx), CH375_SUCCESS);
     
     memset(&gUdev, 0x00, sizeof(gUdev));
     gUdev.ctx = pCtx;
