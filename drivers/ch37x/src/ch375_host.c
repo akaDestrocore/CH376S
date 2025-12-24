@@ -59,7 +59,7 @@ int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate) {
         return CH37X_HOST_ERROR;
     }
 
-    ret = ch37x_setUSBMod(pCtx, CH37X_USB_MODE_SOF_AUTO);
+    ret = ch37x_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
     if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set USB mode failed: %d", ret);
         return CH37X_HOST_ERROR;
@@ -91,7 +91,7 @@ int ch375_hostWaitDeviceConnect(struct ch375_Context_t *pCtx, uint32_t timeout) 
     uint32_t cnt;
 
     for (cnt = 0; cnt < timeout; cnt++) {
-        ret = ch375_testConnect(pCtx, &conn_status);
+        ret = ch37x_testConnect(pCtx, &conn_status);
         if (CH37X_SUCCESS != ret) {
             LOG_ERR("Test connect failed: %d", ret);
             return CH37X_HOST_ERROR;
@@ -321,7 +321,7 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
     pCtx = pUdev->ctx;
     pUdev->configured = false;
     
-    ret = ch375_testConnect(pCtx, &conn_status);
+    ret = ch37x_testConnect(pCtx, &conn_status);
     if (CH37X_SUCCESS != ret) {
         LOG_ERR("Device connection failed: %d", ret);
         pUdev->connected = false;
@@ -371,7 +371,7 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
     }
 
     if ( USB_SPEED_SPEED_LS == speed) {
-        ret = ch375_setDevSpeed(pCtx, speed);
+        ret = ch37x_setDevSpeed(pCtx, speed);
         if (CH37X_SUCCESS != ret) {
             LOG_ERR("Failed to set device speed: %d", ret);
             pUdev->connected = false;
@@ -989,7 +989,7 @@ static int reset_dev(struct ch375_Context_t *pCtx) {
     
     int ret = -1;
 
-    ret = ch37x_setUSBMod(pCtx, CH37X_USB_MODE_RESET);
+    ret = ch37x_setUSBMode(pCtx, CH37X_USB_MODE_RESET);
     if (CH37X_SUCCESS != ret) {
         LOG_ERR("USB reset failed: %d", ret);
         return CH37X_HOST_ERROR;
@@ -997,7 +997,7 @@ static int reset_dev(struct ch375_Context_t *pCtx) {
 
     k_msleep(20);
 
-    ret = ch37x_setUSBMod(pCtx, CH37X_USB_MODE_SOF_AUTO);
+    ret = ch37x_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
     if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set USB SOF mode failed: %d", ret);
         return CH37X_HOST_ERROR;
@@ -1008,7 +1008,7 @@ static int reset_dev(struct ch375_Context_t *pCtx) {
     ret = ch375_hostWaitDeviceConnect(pCtx, RESET_WAIT_DEVICE_RECONNECT_TIMEOUT_MS);
     if (CH37X_HOST_SUCCESS != ret) {
         LOG_ERR("Wait device reconnect failed: %d", ret);
-        ret = ch37x_setUSBMod(pCtx, CH37X_USB_MODE_SOF_AUTO);
+        ret = ch37x_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
         if (CH37X_SUCCESS != ret) {
             LOG_ERR("Set USB SOF mode failed: %d", ret);
             return CH37X_HOST_ERROR;

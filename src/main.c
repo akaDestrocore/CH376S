@@ -139,12 +139,12 @@ int main(void)
 #endif
 
     // Initialize CH375 USB host controllers
-    ret = initCh375Device(&gDeviceInputs[0], "CH375A", CH376S_A_USART_INDEX, NULL, IFACE_MOUSE);
+    ret = initCh375Device(&gDeviceInputs[0], "CH375A", CH375_A_USART_INDEX, NULL, IFACE_MOUSE);
     if (0 != ret) {
         return ret;
     }
 
-    ret = initCh375Device(&gDeviceInputs[1], "CH375B", CH376S_B_USART_INDEX, NULL, IFACE_KEYBOARD);
+    ret = initCh375Device(&gDeviceInputs[1], "CH375B", CH375_B_USART_INDEX, NULL, IFACE_KEYBOARD);
     if (0 != ret) {
         return ret;
     }

@@ -117,9 +117,9 @@ extern "C" {
     #define CH37X_USB_INT_BUF_OVER      CH376S_USB_INT_BUF_OVER
     #define CH37X_USB_INT_USB_READY     CH376S_USB_INT_USB_READY
 #else
-    #define CH37X_USB_INT_SUCCESS       CH375_USB_INT_SUCCESS
+    #define CH37X_USB_INT_SUCCESS       CH37X_USB_INT_SUCCESS
     #define CH37X_USB_INT_CONNECT       CH375_USB_INT_CONNECT
-    #define CH37X_USB_INT_DISCONNECT    CH375_USB_INT_DISCONNECT
+    #define CH37X_USB_INT_DISCONNECT    CH37X_USB_INT_DISCONNECT
     #define CH37X_USB_INT_BUF_OVER      CH375_USB_INT_BUF_OVER
     #define CH37X_USB_INT_USB_READY     CH375_USB_INT_USB_READY
 #endif
@@ -133,8 +133,8 @@ extern "C" {
     #define CH37X_RETRY_TIMES_INFINITY  CH376S_RETRY_TIMES_INFINITY
 #else
     #define CH37X_RETRY_TIMES_ZERO      CH375_RETRY_TIMES_ZERO
-    #define CH37X_RETRY_TIMES_2MS       CH375_RETRY_TIMES_2MS
-    #define CH37X_RETRY_TIMES_INFINITY  CH375_RETRY_TIMES_INFINITY
+    #define CH37X_RETRY_TIMES_2MS       CH37X_RETRY_TIMES_2MS
+    #define CH37X_RETRY_TIMES_INFINITY  CH37X_RETRY_TIMES_INFINITY
 #endif
 
 /* ==========================================================================
@@ -147,7 +147,7 @@ extern "C" {
 #else
     #define CH37X_CMD(x)                CH375_CMD(x)
     #define CH37X_DATA(x)               CH375_DATA(x)
-    #define CH37X_PID2STATUS(x)         CH375_PID2STATUS(x)
+    #define CH37X_PID2STATUS(x)         CH37X_PID2STATUS(x)
 #endif
 
 /* ==========================================================================
@@ -170,7 +170,7 @@ extern "C" {
 /**
  * @brief Initialize hardware layer
  */
-int ch37x_hwInitManual(const char *name, int uart_index, 
+static inline int ch37x_hwInitManual(const char *name, int uart_index, 
                                       const struct gpio_dt_spec *int_gpio,
                                       uint32_t initial_baudrate,
                                       ch37x_Context_t **ppCtxOut) {
@@ -186,7 +186,7 @@ int ch37x_hwInitManual(const char *name, int uart_index,
 /**
  * @brief Set hardware baudrate
  */
-int ch37x_hwSetBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
+static inline int ch37x_hwSetBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
 #ifdef USE_CH376S
     return ch376s_hwSetBaudrate((struct ch376s_Context_t *)pCtx, baudrate);
 #else
@@ -201,7 +201,7 @@ int ch37x_hwSetBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
 /**
  * @brief Check if chip exists
  */
-int ch37x_checkExist(ch37x_Context_t *pCtx) {
+static inline int ch37x_checkExist(ch37x_Context_t *pCtx) {
 #ifdef USE_CH376S
     return ch376s_checkExist((struct ch376s_Context_t *)pCtx);
 #else
@@ -212,7 +212,7 @@ int ch37x_checkExist(ch37x_Context_t *pCtx) {
 /**
  * @brief Set USB mode
  */
-int ch37x_setUSBMode(ch37x_Context_t *pCtx, uint8_t mode) {
+static inline int ch37x_setUSBMode(ch37x_Context_t *pCtx, uint8_t mode) {
 #ifdef USE_CH376S
     return ch376s_setUSBMode((struct ch376s_Context_t *)pCtx, mode);
 #else
@@ -223,7 +223,7 @@ int ch37x_setUSBMode(ch37x_Context_t *pCtx, uint8_t mode) {
 /**
  * @brief Set baudrate
  */
-int ch37x_setBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
+static inline int ch37x_setBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
 #ifdef USE_CH376S
     return ch376s_setBaudrate((struct ch376s_Context_t *)pCtx, baudrate);
 #else
@@ -238,7 +238,7 @@ int ch37x_setBaudrate(ch37x_Context_t *pCtx, uint32_t baudrate) {
 /**
  * @brief Test device connection
  */
-int ch37x_testConnect(ch37x_Context_t *pCtx, uint8_t *pConnStatus) {
+static inline int ch37x_testConnect(ch37x_Context_t *pCtx, uint8_t *pConnStatus) {
 #ifdef USE_CH376S
     return ch376s_testConnect((struct ch376s_Context_t *)pCtx, pConnStatus);
 #else
@@ -249,7 +249,7 @@ int ch37x_testConnect(ch37x_Context_t *pCtx, uint8_t *pConnStatus) {
 /**
  * @brief Get device speed
  */
-int ch37x_getDevSpeed(ch37x_Context_t *pCtx, uint8_t *pSpeed) {
+static inline int ch37x_getDevSpeed(ch37x_Context_t *pCtx, uint8_t *pSpeed) {
 #ifdef USE_CH376S
     return ch376s_getDevSpeed((struct ch376s_Context_t *)pCtx, pSpeed);
 #else
@@ -260,7 +260,7 @@ int ch37x_getDevSpeed(ch37x_Context_t *pCtx, uint8_t *pSpeed) {
 /**
  * @brief Set device speed
  */
-int ch37x_setDevSpeed(ch37x_Context_t *pCtx, uint8_t speed) {
+static inline int ch37x_setDevSpeed(ch37x_Context_t *pCtx, uint8_t speed) {
 #ifdef USE_CH376S
     return ch376s_setDevSpeed((struct ch376s_Context_t *)pCtx, speed);
 #else
@@ -271,7 +271,7 @@ int ch37x_setDevSpeed(ch37x_Context_t *pCtx, uint8_t speed) {
 /**
  * @brief Set USB address
  */
-int ch37x_setUSBAddr(ch37x_Context_t *pCtx, uint8_t addr) {
+static inline int ch37x_setUSBAddr(ch37x_Context_t *pCtx, uint8_t addr) {
 #ifdef USE_CH376S
     return ch376s_setUSBAddr((struct ch376s_Context_t *)pCtx, addr);
 #else
@@ -282,7 +282,7 @@ int ch37x_setUSBAddr(ch37x_Context_t *pCtx, uint8_t addr) {
 /**
  * @brief Set retry parameters
  */
-int ch37x_setRetry(ch37x_Context_t *pCtx, uint8_t times) {
+static inline int ch37x_setRetry(ch37x_Context_t *pCtx, uint8_t times) {
 #ifdef USE_CH376S
     return ch376s_setRetry((struct ch376s_Context_t *)pCtx, times);
 #else
@@ -293,7 +293,7 @@ int ch37x_setRetry(ch37x_Context_t *pCtx, uint8_t times) {
 /**
  * @brief Send USB token
  */
-int ch37x_sendToken(ch37x_Context_t *pCtx, uint8_t ep, bool tog,
+static inline int ch37x_sendToken(ch37x_Context_t *pCtx, uint8_t ep, bool tog,
                                    uint8_t pid, uint8_t *pStatus) {
 #ifdef USE_CH376S
     return ch376s_sendToken((struct ch376s_Context_t *)pCtx, ep, tog, pid, pStatus);
@@ -305,7 +305,7 @@ int ch37x_sendToken(ch37x_Context_t *pCtx, uint8_t ep, bool tog,
 /**
  * @brief Get interrupt status
  */
-int ch37x_getStatus(ch37x_Context_t *pCtx, uint8_t *pStatus) {
+static inline int ch37x_getStatus(ch37x_Context_t *pCtx, uint8_t *pStatus) {
 #ifdef USE_CH376S
     return ch376s_getStatus((struct ch376s_Context_t *)pCtx, pStatus);
 #else
@@ -316,7 +316,7 @@ int ch37x_getStatus(ch37x_Context_t *pCtx, uint8_t *pStatus) {
 /**
  * @brief Wait for interrupt
  */
-int ch37x_waitInt(ch37x_Context_t *pCtx, uint32_t timeout_ms) {
+static inline int ch37x_waitInt(ch37x_Context_t *pCtx, uint32_t timeout_ms) {
 #ifdef USE_CH376S
     return ch376s_waitInt((struct ch376s_Context_t *)pCtx, timeout_ms);
 #else
@@ -331,7 +331,7 @@ int ch37x_waitInt(ch37x_Context_t *pCtx, uint32_t timeout_ms) {
 /**
  * @brief Write block data
  */
-int ch37x_writeBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff, uint8_t len) {
+static inline int ch37x_writeBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff, uint8_t len) {
 #ifdef USE_CH376S
     return ch376s_writeBlockData((struct ch376s_Context_t *)pCtx, pBuff, len);
 #else
@@ -342,7 +342,7 @@ int ch37x_writeBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff, uint8_t len) {
 /**
  * @brief Read block data
  */
-int ch37x_readBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff, 
+static inline int ch37x_readBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff, 
                                        uint8_t len, uint8_t *pActualLen) {
 #ifdef USE_CH376S
     return ch376s_readBlockData((struct ch376s_Context_t *)pCtx, pBuff, len, pActualLen);
@@ -354,7 +354,7 @@ int ch37x_readBlockData(ch37x_Context_t *pCtx, uint8_t *pBuff,
 /**
  * @brief Get private data from context
  */
-void *ch37x_getPriv(ch37x_Context_t *pCtx) {
+static inline void *ch37x_getPriv(ch37x_Context_t *pCtx) {
 #ifdef USE_CH376S
     return ch376s_getPriv((struct ch376s_Context_t *)pCtx);
 #else
