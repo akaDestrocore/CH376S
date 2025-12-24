@@ -707,24 +707,28 @@ static int usbhid_read(struct USBHID_Device_t *pDev, uint8_t *pBuff, int len, in
         return USBHID_ERROR;
     }
     
+#ifdef USE_CH376S
     // Set retry mode for INT transfers
+    ret = ch375_setRetry(pCtx, CH376S_RETRY_TIMES_ZERO);
+#else
     ret = ch375_setRetry(pCtx, CH375_RETRY_TIMES_ZERO);
-    if (CH375_SUCCESS != ret) {
+#endif
+    if (CH37X_SUCCESS != ret) {
         return USBHID_IO_ERROR;
     }
 
 
     // Send IN token
     ret = ch375_sendToken(pCtx, pEP->ep_addr, pEP->data_toggle, USB_PID_IN, &status);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         return USBHID_IO_ERROR;
     }
 
     // Check status
-    if (CH375_USB_INT_SUCCESS == status) {
+    if (CH37X_USB_INT_SUCCESS == status) {
         uint8_t readLen;
         ret = ch375_readBlockData(pCtx, pBuff, len, &readLen);
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             return USBHID_IO_ERROR;
         }
         
@@ -744,9 +748,15 @@ static int usbhid_read(struct USBHID_Device_t *pDev, uint8_t *pBuff, int len, in
         return -EAGAIN;
     }
 
+#ifdef USE_CH376S
+    if (CH376S_USB_INT_DISCONNECT == status) {
+        return USBHID_NO_DEV;
+    }
+#else
     if (CH375_USB_INT_DISCONNECT == status) {
         return USBHID_NO_DEV;
     }
+#endif
 
     return USBHID_IO_ERROR;
 }

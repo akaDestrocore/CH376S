@@ -77,7 +77,7 @@ typedef enum {
 typedef enum {
     CH375_USB_MODE_INVALID      =   0x04,
     CH375_USB_MODE_NO_SOF       =   0x05,
-    CH375_USB_MODE_SOF_AUTO     =   0x06,
+    CH37X_USB_MODE_SOF_AUTO     =   0x06,
     CH375_USB_MODE_RESET        =   0x07
 } ch375_USBHostMode_e;
 
@@ -85,7 +85,7 @@ typedef enum {
  * @brief CH375 USB host interrupt states
  */
 typedef enum {
-    CH375_USB_INT_SUCCESS       =   0x14,
+    CH37X_USB_INT_SUCCESS       =   0x14,
     CH375_USB_INT_CONNECT       =   0x15,
     CH375_USB_INT_DISCONNECT    =   0x16,
     CH375_USB_INT_BUF_OVER      =   0x17,
@@ -101,7 +101,7 @@ typedef enum {
  * @brief CH375 error codes
  */
 typedef enum {
-    CH375_SUCCESS               =   0,
+    CH37X_SUCCESS               =   0,
     CH375_ERROR                 =   -1,
     CH375_PARAM_INVALID         =   -2,
     CH375_WRITE_CMD_FAILED      =   -3,

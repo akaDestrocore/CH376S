@@ -66,7 +66,7 @@ int ch375_openContext(struct ch375_Context_t **ppCtx, ch375_writeCmdFn_t write_c
 
 	*ppCtx = new_ctx;
 
-    return CH375_SUCCESS;
+    return CH37X_SUCCESS;
 }
 
 /**
@@ -82,7 +82,7 @@ int ch375_closeContext(struct ch375_Context_t *pCtx) {
 	}
 
 	k_free(pCtx);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -121,19 +121,19 @@ int ch375_checkExist(struct ch375_Context_t *pCtx) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_CHECK_EXIST);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, CH375_CHECK_EXIST_DATA1);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_readData(pCtx, &recvBuff);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -145,7 +145,7 @@ int ch375_checkExist(struct ch375_Context_t *pCtx) {
 		return CH375_NO_EXIST;
 	}
 
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -167,13 +167,13 @@ int ch375_getVersion(struct ch375_Context_t *pCtx, uint8_t *pVersion) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_GET_IC_VER);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_readData(pCtx, &ver);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -182,7 +182,7 @@ int ch375_getVersion(struct ch375_Context_t *pCtx, uint8_t *pVersion) {
 	*pVersion = ver & 0x3F;
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -271,25 +271,25 @@ int ch375_setBaudrate(struct ch375_Context_t *pCtx, uint32_t baudrate) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_SET_BAUDRATE);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, data1);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, data2);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -311,19 +311,19 @@ int ch375_setUSBMode(struct ch375_Context_t *pCtx, uint8_t mode) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_SET_USB_MODE);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, mode);
-	if ( CH375_SUCCESS != ret ) {
+	if ( CH37X_SUCCESS != ret ) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_readData(pCtx, &usb_mode);
-	if ( CH375_SUCCESS != ret ) {
+	if ( CH37X_SUCCESS != ret ) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -335,7 +335,7 @@ int ch375_setUSBMode(struct ch375_Context_t *pCtx, uint8_t mode) {
 		return CH375_ERROR;
 	}
 
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -357,13 +357,13 @@ int ch375_getStatus(struct ch375_Context_t *pCtx, uint8_t *pStatus) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_GET_STATUS);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_readData(pCtx, &status);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -371,7 +371,7 @@ int ch375_getStatus(struct ch375_Context_t *pCtx, uint8_t *pStatus) {
 	*pStatus = status;
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -394,7 +394,7 @@ int ch375_abortNAK(struct ch375_Context_t *pCtx) {
 
 	k_mutex_unlock(&pCtx->lock);
 
-	return ret == CH375_SUCCESS ? CH375_SUCCESS : CH375_WRITE_CMD_FAILED;
+	return ret == CH37X_SUCCESS ? CH37X_SUCCESS : CH375_WRITE_CMD_FAILED;
 }
 
 /**
@@ -433,15 +433,15 @@ int ch375_waitInt(struct ch375_Context_t *pCtx, uint32_t timeout_ms) {
     
     // Initial status read
     ret = ch375_getStatus(pCtx, &status);
-    if ( CH375_SUCCESS == ret ) {
+    if ( CH37X_SUCCESS == ret ) {
         lastStatus = status;
         
         // Check if already completed
-        if (status == CH375_USB_INT_SUCCESS || status == CH375_USB_INT_CONNECT ||
+        if (status == CH37X_USB_INT_SUCCESS || status == CH375_USB_INT_CONNECT ||
         	status == CH375_USB_INT_DISCONNECT || status == CH375_USB_INT_USB_READY || status == CH375_PID2STATUS(USB_PID_NAK) ||
             status == CH375_PID2STATUS(USB_PID_STALL) || status == CH375_PID2STATUS(USB_PID_ACK)) {
             
-            return CH375_SUCCESS;
+            return CH37X_SUCCESS;
         }
     }
     
@@ -451,19 +451,19 @@ int ch375_waitInt(struct ch375_Context_t *pCtx, uint32_t timeout_ms) {
 		pollCount++;
         ret = ch375_getStatus(pCtx, &status);
         
-        if (CH375_SUCCESS == ret) {
+        if (CH37X_SUCCESS == ret) {
             // Operation likely complete
             if (status != lastStatus) {
                 lastStatus = status;
             }
             
             // Check for completion status codes
-            if (status == CH375_USB_INT_SUCCESS || status == CH375_USB_INT_CONNECT ||
+            if (status == CH37X_USB_INT_SUCCESS || status == CH375_USB_INT_CONNECT ||
                 status == CH375_USB_INT_DISCONNECT ||
                 status == CH375_USB_INT_USB_READY || status == CH375_PID2STATUS(USB_PID_NAK) ||
                 status == CH375_PID2STATUS(USB_PID_STALL) || status == CH375_PID2STATUS(USB_PID_ACK)) {
                 
-				return CH375_SUCCESS;
+				return CH37X_SUCCESS;
             }
         }
         
@@ -511,7 +511,7 @@ int ch375_testConnect(struct ch375_Context_t *pCtx, uint8_t *pConnStatus) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx,CH375_CMD_TEST_CONNECT);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
@@ -519,7 +519,7 @@ int ch375_testConnect(struct ch375_Context_t *pCtx, uint8_t *pConnStatus) {
 	k_msleep(1);
 
 	ret = ch375_readData(pCtx, &buff);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -534,7 +534,7 @@ int ch375_testConnect(struct ch375_Context_t *pCtx, uint8_t *pConnStatus) {
 	}
 
 	*pConnStatus = buff;
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -556,20 +556,20 @@ int ch375_getDevSpeed(struct ch375_Context_t *pCtx, uint8_t *pSpeed) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret  = ch375_writeCmd(pCtx, CH375_CMD_GET_DEV_RATE);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	// get device rate data
 	ret = ch375_writeData(pCtx, 0x07);
-	if ( ret != CH375_SUCCESS) {
+	if ( ret != CH37X_SUCCESS) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_readData(pCtx, &devSpeed);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_READ_DATA_FAILED;
 	}
@@ -577,7 +577,7 @@ int ch375_getDevSpeed(struct ch375_Context_t *pCtx, uint8_t *pSpeed) {
 	*pSpeed = (devSpeed & 0x10) ? USB_SPEED_SPEED_LS : USB_SPEED_SPEED_FS;
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -606,19 +606,19 @@ int ch375_setDevSpeed(struct ch375_Context_t *pCtx, uint8_t speed) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_SET_USB_SPEED);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, devSpeed);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -639,19 +639,19 @@ int ch375_setUSBAddr(struct ch375_Context_t *pCtx, uint8_t addr) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_SET_USB_ADDR);
-	if ( CH375_SUCCESS != ret) {
+	if ( CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, addr);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	k_mutex_unlock(&pCtx->lock);
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /**
@@ -673,14 +673,14 @@ int ch375_setRetry(struct ch375_Context_t *pCtx, uint8_t times) {
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_SET_RETRY);
-	if ( CH375_SUCCESS != ret ) {
+	if ( CH37X_SUCCESS != ret ) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	// Set retry data
 	ret = ch375_writeData(pCtx, 0x25);
-	if (ret != CH375_SUCCESS) {
+	if (ret != CH37X_SUCCESS) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
@@ -697,13 +697,13 @@ int ch375_setRetry(struct ch375_Context_t *pCtx, uint8_t times) {
 	}
 
 	ret = ch375_writeData(pCtx, param);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         k_mutex_unlock(&pCtx->lock);
         return CH375_WRITE_CMD_FAILED;
     }
     
     k_mutex_unlock(&pCtx->lock);
-    return CH375_SUCCESS;
+    return CH37X_SUCCESS;
 }
 
 /**
@@ -742,19 +742,19 @@ int ch375_sendToken(struct ch375_Context_t *pCtx, uint8_t ep, bool tog,
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 
 	ret = ch375_writeCmd(pCtx, CH375_CMD_ISSUE_TKN_X);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, togVal);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
 
 	ret = ch375_writeData(pCtx, epPID);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
 		k_mutex_unlock(&pCtx->lock);
 		return CH375_WRITE_CMD_FAILED;
 	}
@@ -768,17 +768,17 @@ int ch375_sendToken(struct ch375_Context_t *pCtx, uint8_t ep, bool tog,
 
 	// Wait for INT
 	ret = ch375_waitInt(pCtx, WAIT_INT_TIMEOUT_MS);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         return CH375_TIMEOUT;
     }
 
 	ret = ch375_getStatus(pCtx, &status);
-	if (CH375_SUCCESS != ret) {
+	if (CH37X_SUCCESS != ret) {
         return CH375_ERROR;
     }
 
 	*pStatus = status;
-	return CH375_SUCCESS;
+	return CH37X_SUCCESS;
 }
 
 /* --------------------------------------------------------------------------
@@ -855,13 +855,13 @@ int ch375_writeBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t l
 	k_mutex_lock(&pCtx->lock, K_FOREVER);
 	
 	ret = ch375_writeCmd(pCtx, CH375_CMD_WR_USB_DATA7);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         k_mutex_unlock(&pCtx->lock);
         return CH375_WRITE_CMD_FAILED;
     }
 
 	ret = ch375_writeData(pCtx, len);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         k_mutex_unlock(&pCtx->lock);
         return CH375_WRITE_CMD_FAILED;
     }
@@ -869,7 +869,7 @@ int ch375_writeBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t l
 	offset = 0;
 	while (len > 0) {
 		ret = ch375_writeData(pCtx, pBuff[offset]);
-		if (CH375_SUCCESS != ret) {
+		if (CH37X_SUCCESS != ret) {
             k_mutex_unlock(&pCtx->lock);
             return CH375_WRITE_CMD_FAILED;
         }
@@ -878,7 +878,7 @@ int ch375_writeBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t l
 	}
 
 	k_mutex_unlock(&pCtx->lock);
-    return CH375_SUCCESS;
+    return CH37X_SUCCESS;
 }
 
 /**
@@ -904,14 +904,14 @@ int ch375_readBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t le
     k_mutex_lock(&pCtx->lock, K_FOREVER);
     
     ret = ch375_writeCmd(pCtx, CH375_CMD_RD_USB_DATA);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         k_mutex_unlock(&pCtx->lock);
         return CH375_WRITE_CMD_FAILED;
     }
     
     // First byte is the len
     ret = ch375_readData(pCtx, &dataLen);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         k_mutex_unlock(&pCtx->lock);
         return CH375_READ_DATA_FAILED;
     }
@@ -928,7 +928,7 @@ int ch375_readBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t le
             break;
         }
         
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Read failed at offset %d: %d", offset, ret);
             k_mutex_unlock(&pCtx->lock);
             return CH375_READ_DATA_FAILED;
@@ -941,5 +941,5 @@ int ch375_readBlockData(struct ch375_Context_t *pCtx, uint8_t *pBuff, uint8_t le
     *pActualLen = offset;
     
     k_mutex_unlock(&pCtx->lock);
-    return CH375_SUCCESS;
+    return CH37X_SUCCESS;
 }

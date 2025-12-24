@@ -33,7 +33,7 @@ static struct ch375_Context_t *pCtx;
 static void test_setup(void *f)
 {
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&pCtx), CH375_SUCCESS);
+    zassert_equal(mock_ch375Init(&pCtx), CH37X_SUCCESS);
 }
 
 static void test_teardown(void *f)
@@ -54,7 +54,7 @@ ZTEST(ch375_core, test_checkexist_success)
     
     int ret = ch375_checkExist(pCtx);
     
-    zassert_equal(ret, CH375_SUCCESS, "Check exist should succeed");
+    zassert_equal(ret, CH37X_SUCCESS, "Check exist should succeed");
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_CHECK_EXIST), "CHECK_EXIST command should be sent");
     zassert_equal(mock_ch375GetLastData(), CH375_CHECK_EXIST_DATA1, "Should send 0x65 as data");
 }
@@ -89,7 +89,7 @@ ZTEST(ch375_core, test_get_version_success)
     
     int ret = ch375_getVersion(pCtx, &version);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_equal(version, 0x03, "Should mask to lower 6 bits");
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_GET_IC_VER));
 }
@@ -108,9 +108,9 @@ ZTEST(ch375_core, test_set_usb_mode_host)
 {
     mock_ch375QueueResponse(CH375_CMD_RET_SUCCESS);
     
-    int ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_SOF_AUTO);
+    int ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_SET_USB_MODE));
 }
 
@@ -118,7 +118,7 @@ ZTEST(ch375_core, test_set_usb_mode_failure)
 {
     mock_ch375QueueResponse(CH375_CMD_RET_FAILED);
     
-    int ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_SOF_AUTO);
+    int ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
     
     zassert_equal(ret, CH375_ERROR, "Should fail with error response");
 }
@@ -129,12 +129,12 @@ ZTEST(ch375_core, test_set_usb_mode_failure)
 ZTEST(ch375_core, test_get_status)
 {
     uint8_t status = 0;
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_getStatus(pCtx, &status);
     
-    zassert_equal(ret, CH375_SUCCESS);
-    zassert_equal(status, CH375_USB_INT_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
+    zassert_equal(status, CH37X_USB_INT_SUCCESS);
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_GET_STATUS));
 }
 
@@ -148,7 +148,7 @@ ZTEST(ch375_core, test_connect_device_connected)
     
     int ret = ch375_testConnect(pCtx, &connStatus);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_equal(connStatus, CH375_USB_INT_CONNECT);
 }
 
@@ -163,7 +163,7 @@ ZTEST(ch375_core, test_connect_device_disconnected)
     
     int ret = ch375_testConnect(pCtx, &connStatus);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_equal(connStatus, CH375_USB_INT_DISCONNECT);
 }
 
@@ -172,11 +172,11 @@ ZTEST(ch375_core, test_connect_device_disconnected)
  * ======================================================================== */
 ZTEST(ch375_core, test_wait_int_immediate)
 {
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_waitInt(pCtx, 1000);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
 }
 
 ZTEST(ch375_core, test_wait_int_after_polling)
@@ -184,11 +184,11 @@ ZTEST(ch375_core, test_wait_int_after_polling)
     mock_ch375QueueStatus(0x00);
     mock_ch375QueueStatus(0x00);
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_waitInt(pCtx, 1000);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
 }
 
 ZTEST(ch375_core, test_wait_int_timeout)
@@ -211,14 +211,14 @@ ZTEST(ch375_core, test_send_token_setup)
     // Queue statuses for ch375_waitInt() polling
     mock_ch375QueueStatus(0x00);
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     // Final getStatus call
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_sendToken(pCtx, 0, false, USB_PID_SETUP, &status);
     
-    zassert_equal(ret, CH375_SUCCESS);
-    zassert_equal(status, CH375_USB_INT_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
+    zassert_equal(status, CH37X_USB_INT_SUCCESS);
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_ISSUE_TKN_X));
 }
 
@@ -229,13 +229,13 @@ ZTEST(ch375_core, test_send_token_in)
     // Queue statuses for polling
     mock_ch375QueueStatus(0x00);
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_sendToken(pCtx, 0, true, USB_PID_IN, &status);
     
-    zassert_equal(ret, CH375_SUCCESS);
-    zassert_equal(status, CH375_USB_INT_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
+    zassert_equal(status, CH37X_USB_INT_SUCCESS);
     
     // Verify toggle bit set (0xC0)
     uint8_t history[10];
@@ -254,7 +254,7 @@ ZTEST(ch375_core, test_write_block_data)
     
     int ret = ch375_writeBlockData(pCtx, data, sizeof(data));
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_true(mock_ch375VerifyCmdSent(CH375_CMD_WR_USB_DATA7));
     
     // Verify data was written
@@ -277,7 +277,7 @@ ZTEST(ch375_core, test_read_block_data)
     
     int ret = ch375_readBlockData(pCtx, buffer, sizeof(buffer), &actualLen);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_equal(actualLen, 4);
     zassert_equal(buffer[0], 0xAA);
     zassert_equal(buffer[3], 0xDD);
@@ -297,7 +297,7 @@ ZTEST(ch375_core, test_read_block_data_short_packet)
     
     int ret = ch375_readBlockData(pCtx, buffer, sizeof(buffer), &actualLen);
     
-    zassert_equal(ret, CH375_SUCCESS);
+    zassert_equal(ret, CH37X_SUCCESS);
     zassert_equal(actualLen, 3, "Should return actual bytes read");
 }
 

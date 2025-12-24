@@ -40,7 +40,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "ch375.h"
+#include "ch37x_common.h"
 #include "usb.h"
 
 // USB Control Setup Size

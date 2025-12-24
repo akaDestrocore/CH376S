@@ -24,6 +24,7 @@
  */
 
 #include "ch375_host.h"
+#include "ch37x_common.h"
 
 LOG_MODULE_REGISTER(ch375_host, LOG_LEVEL_DBG);
 
@@ -54,13 +55,13 @@ int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate) {
     }
 
     ret = ch375_checkExist(pCtx);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("CH375 doesn't exist: %d", ret);
         return CH375_HOST_ERROR;
     }
 
-    ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_SOF_AUTO);
-    if (CH375_SUCCESS != ret) {
+    ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set USB mode failed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -69,7 +70,7 @@ int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate) {
     k_msleep(20);
 
     ret = ch375_setBaudrate(pCtx, baudrate);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set baudrate failed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -91,15 +92,24 @@ int ch375_hostWaitDeviceConnect(struct ch375_Context_t *pCtx, uint32_t timeout) 
     uint32_t cnt;
 
     for (cnt = 0; cnt < timeout; cnt++) {
+#ifdef USE_CH376S
+        ret = ch37x_testConnect(pCtx, &conn_status);
+#else
         ret = ch375_testConnect(pCtx, &conn_status);
-        if (CH375_SUCCESS != ret) {
+#endif
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Test connect failed: %d", ret);
             return CH375_HOST_ERROR;
         }
-
+#ifdef USE_CH376S
+        if (CH376S_USB_INT_DISCONNECT != conn_status) {
+            return CH375_HOST_SUCCESS;
+        }
+#else
         if (CH375_USB_INT_DISCONNECT != conn_status) {
             return CH375_HOST_SUCCESS;
         }
+#endif
     }
 
     return CH375_HOST_TIMEOUT;
@@ -322,14 +332,18 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
     pUdev->configured = false;
     
     ret = ch375_testConnect(pCtx, &conn_status);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Device connection failed: %d", ret);
         pUdev->connected = false;
         pUdev->configured = false;
         return CH375_HOST_ERROR;
     }
 
+#ifdef USE_CH376S
+    if (CH376S_USB_INT_DISCONNECT == conn_status) {
+#else
     if (CH375_USB_INT_DISCONNECT == conn_status) {
+#endif
         LOG_ERR("Device disconnected");
         pUdev->connected = false;
         pUdev->configured = false;
@@ -337,7 +351,7 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
     }
 
     ret = ch375_getDevSpeed(pCtx, &speed);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Failed obtaining device speed info: %d", ret);
         pUdev->connected = false;
         pUdev->configured = false;
@@ -372,7 +386,7 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
 
     if ( USB_SPEED_SPEED_LS == speed) {
         ret = ch375_setDevSpeed(pCtx, speed);
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Failed to set device speed: %d", ret);
             pUdev->connected = false;
             pUdev->configured = false;
@@ -429,7 +443,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
     } else {
         ret = ch375_setRetry(pCtx, CH375_RETRY_TIMES_INFINITY);
     }
-    if ( CH375_SUCCESS != ret) {
+    if ( CH37X_SUCCESS != ret) {
         LOG_ERR("Set retry failed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -443,7 +457,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
     setup->wLength = sys_cpu_to_le16(wLength);
 
     ret = ch375_writeBlockData(pCtx, setupBuff, CONTROL_SETUP_SIZE);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Write SETUP packet failed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -451,12 +465,12 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
     k_busy_wait(200);
 
     ret = ch375_sendToken(pCtx, 0, toggle, USB_PID_SETUP, &status);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Send SETUP token failed: %d", ret);
         return CH375_HOST_ERROR;
     }
 
-    if (CH375_USB_INT_SUCCESS != status) {
+    if (CH37X_USB_INT_SUCCESS != status) {
         LOG_ERR("SETUP failed, status: 0x%02X", status);
         if (CH375_USB_INT_DISCONNECT == status) {
             return CH375_HOST_DEV_DISCONNECT;
@@ -478,12 +492,12 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
                 uint8_t packetLen = 0;
                 
                 ret = ch375_sendToken(pCtx, 0x00, toggle, USB_PID_IN, &status);
-                if (CH375_SUCCESS != ret) {
+                if (CH37X_SUCCESS != ret) {
                     LOG_ERR("Send IN token failed: %d", ret);
                     return CH375_HOST_ERROR;
                 }
 
-                if (CH375_USB_INT_SUCCESS != status) {
+                if (CH37X_USB_INT_SUCCESS != status) {
                     // Handle NAK
                     if (status == CH375_PID2STATUS(USB_PID_NAK)) {
                         naks++;
@@ -528,7 +542,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
                 ret = ch375_readBlockData(pCtx, pData + totalReceived, 
                                         wLength - totalReceived, &packetLen);
                 
-                if (CH375_SUCCESS != ret) {
+                if (CH37X_SUCCESS != ret) {
                     LOG_ERR("Read data failed: %d (received: %d/%d)", 
                            ret, totalReceived, wLength);
                     
@@ -572,18 +586,18 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
                 }
 
                 ret = ch375_writeBlockData(pCtx, pData + totalReceived, toSend);
-                if (CH375_SUCCESS != ret) {
+                if (CH37X_SUCCESS != ret) {
                     LOG_ERR("Write data failed: %d", ret);
                     return CH375_HOST_ERROR;
                 }
 
                 ret = ch375_sendToken(pCtx, 0x00, toggle, USB_PID_OUT, &status);
-                if (CH375_SUCCESS != ret) {
+                if (CH37X_SUCCESS != ret) {
                     LOG_ERR("Send OUT token failed: %d", ret);
                     return CH375_HOST_ERROR;
                 }
 
-                if (CH375_USB_INT_SUCCESS != status) {
+                if (CH37X_USB_INT_SUCCESS != status) {
                     LOG_ERR("OUT token failed, status: 0x%02X", status);
                     if (CH375_USB_INT_DISCONNECT == status) {
                         return CH375_HOST_DEV_DISCONNECT;
@@ -604,7 +618,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
     if (SETUP_IN(reqType)) {
         uint8_t dummy[1] = {0};
         ret = ch375_writeBlockData(pCtx, dummy, 0);
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Write status OUT failed: %d", ret);
             
             if (totalReceived > 0) {
@@ -618,7 +632,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
         }
 
         ret = ch375_sendToken(pCtx, 0x00, 0x01, USB_PID_OUT, &status);
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Send status OUT token failed: %d", ret);
             
             if (totalReceived > 0) {
@@ -631,7 +645,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
             return CH375_HOST_ERROR;
         }
 
-        if (status != CH375_USB_INT_SUCCESS) {
+        if (status != CH37X_USB_INT_SUCCESS) {
             LOG_ERR("Status OUT failed: 0x%02X", status);
             
             if (totalReceived > 0) {
@@ -654,12 +668,12 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
         }
     } else {
         ret = ch375_sendToken(pCtx, 0x00, 0x01, USB_PID_IN, &status);
-        if (CH375_SUCCESS != ret) {
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Send status IN token failed: %d", ret);
             return CH375_HOST_ERROR;
         }
         
-        if (CH375_USB_INT_SUCCESS != status) {
+        if (CH37X_USB_INT_SUCCESS != status) {
             LOG_ERR("Status IN failed: 0x%02X", status);
             if (CH375_USB_INT_DISCONNECT == status) {
                 return CH375_HOST_DEV_DISCONNECT;
@@ -713,7 +727,7 @@ int ch375_hostBulkTransfer(struct USB_Device_t *pUdev, uint8_t ep, uint8_t *pDat
     }
 
     ret = ch375_setRetry(pCtx, CH375_RETRY_TIMES_ZERO);
-    if (CH375_SUCCESS != ret) {
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set retry dailed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -728,7 +742,7 @@ int ch375_hostBulkTransfer(struct USB_Device_t *pUdev, uint8_t ep, uint8_t *pDat
         
         if (EP_IN(ep)) {
             ret = ch375_sendToken(pCtx, ep, endpoint->data_toggle, USB_PID_IN, &status);
-            if (CH375_SUCCESS != ret) {
+            if (CH37X_SUCCESS != ret) {
                 LOG_ERR("[#%" PRIu32 "] Send IN token failed: %d", thisTransfer, ret);
                 return CH375_HOST_ERROR;
             }
@@ -738,9 +752,9 @@ int ch375_hostBulkTransfer(struct USB_Device_t *pUdev, uint8_t ep, uint8_t *pDat
                         thisTransfer, status, loopCount);
             }
             
-            if (CH375_USB_INT_SUCCESS == status) {
+            if (CH37X_USB_INT_SUCCESS == status) {
                 ret = ch375_readBlockData(pCtx, pData + offset, len, &actualLen);
-                if (CH375_SUCCESS != ret) {
+                if (CH37X_SUCCESS != ret) {
                     LOG_ERR("[#%" PRIu32 "] Read data failed: %d", thisTransfer, ret);
                     return CH375_HOST_ERROR;
                 }
@@ -748,23 +762,23 @@ int ch375_hostBulkTransfer(struct USB_Device_t *pUdev, uint8_t ep, uint8_t *pDat
             }
         } else {
             ret = ch375_writeBlockData(pCtx, pData + offset, len);
-            if (CH375_SUCCESS != ret) {
+            if (CH37X_SUCCESS != ret) {
                 LOG_ERR("[#%" PRIu32 "] Write data failed: %d", thisTransfer, ret);
                 return CH375_HOST_ERROR;
             }
             
             ret = ch375_sendToken(pCtx, ep, endpoint->data_toggle, USB_PID_OUT, &status);
-            if (CH375_SUCCESS != ret) {
+            if (CH37X_SUCCESS != ret) {
                 LOG_ERR("[#%" PRIu32 "] Send OUT token failed: %d", thisTransfer, ret);
                 return CH375_HOST_ERROR;
             }
             
-            if (CH375_USB_INT_SUCCESS == status) {
+            if (CH37X_USB_INT_SUCCESS == status) {
                 actualLen = len;
             }
         }
 
-        if (CH375_USB_INT_SUCCESS == status) {
+        if (CH37X_USB_INT_SUCCESS == status) {
             LOG_DBG("[#%" PRIu32 "] Transfer successful: offset=%d->%d residue=%d->%d tog=%d->%d",
                     thisTransfer, offset, offset + actualLen, 
                     resiLen, resiLen - actualLen,
@@ -989,16 +1003,24 @@ static int reset_dev(struct ch375_Context_t *pCtx) {
     
     int ret = -1;
 
+#ifdef USE_CH376S
+    ret = ch375_setUSBMode(pCtx, CH376S_USB_MODE_RESET);
+#else
     ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_RESET);
-    if (CH375_SUCCESS != ret) {
+#endif
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("USB reset failed: %d", ret);
         return CH375_HOST_ERROR;
     }
 
     k_msleep(20);
 
-    ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_SOF_AUTO);
-    if (CH375_SUCCESS != ret) {
+#ifdef USE_CH376S
+    ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
+#else
+    ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
+#endif
+    if (CH37X_SUCCESS != ret) {
         LOG_ERR("Set USB SOF mode failed: %d", ret);
         return CH375_HOST_ERROR;
     }
@@ -1008,8 +1030,8 @@ static int reset_dev(struct ch375_Context_t *pCtx) {
     ret = ch375_hostWaitDeviceConnect(pCtx, RESET_WAIT_DEVICE_RECONNECT_TIMEOUT_MS);
     if (CH375_HOST_SUCCESS != ret) {
         LOG_ERR("Wait device reconnect failed: %d", ret);
-        ret = ch375_setUSBMode(pCtx, CH375_USB_MODE_SOF_AUTO);
-        if (CH375_SUCCESS != ret) {
+        ret = ch375_setUSBMode(pCtx, CH37X_USB_MODE_SOF_AUTO);
+        if (CH37X_SUCCESS != ret) {
             LOG_ERR("Set USB SOF mode failed: %d", ret);
             return CH375_HOST_ERROR;
         }

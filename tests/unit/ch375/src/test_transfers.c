@@ -35,7 +35,7 @@ static struct USB_Device_t udev;
 static void test_setup(void *f)
 {
     mock_ch375Reset();
-    zassert_equal(mock_ch375Init(&gCtx), CH375_SUCCESS);
+    zassert_equal(mock_ch375Init(&gCtx), CH37X_SUCCESS);
     
     // Initialize minimal USB device structure
     memset(&udev, 0, sizeof(udev));
@@ -61,17 +61,17 @@ static void queue_control_success_responses(void)
     // SETUP stage success
     mock_ch375QueueStatus(0x00);
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     // Final getStatus call after waitInt returns
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
 }
 
 static void queue_control_data_in_responses(const uint8_t *pData, size_t len)
 {
     // DATA IN stage success
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     // Queue data with length prefix
     mock_ch375QueueResponse(len);
@@ -79,16 +79,16 @@ static void queue_control_data_in_responses(const uint8_t *pData, size_t len)
     
     // STATUS OUT stage
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
 }
 
 static void queue_control_status_in_success(void)
 {
     // STATUS IN stage
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
 }
 
 /* ========================================================================
@@ -207,22 +207,22 @@ ZTEST(ch375_transfers, test_control_transfer_multi_packet)
     
     // First DATA IN packet: full 64 bytes
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     mock_ch375QueueResponse(64);
     mock_ch375QueueResponses(packet1, 64);
     
     // Second DATA IN packet
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     mock_ch375QueueResponse(32);
     mock_ch375QueueResponses(packet2, 32);
     
     // STATUS OUT stage
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     // Execute
     int ret = ch375_hostControlTransfer( &udev, USB_REQ_TYPE(USB_DIR_IN, USB_TYPE_STANDARD, USB_RECIP_DEVICE), 
@@ -253,8 +253,8 @@ ZTEST(ch375_transfers, test_bulk_transfer_in_basic)
     
     // Simulate successful IN transfer
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     mock_ch375QueueResponse(64);
     mock_ch375QueueResponses(testData, 64);
     
@@ -289,8 +289,8 @@ ZTEST(ch375_transfers, test_bulk_transfer_nak_then_success)
     
     // Second attempt: Success
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     mock_ch375QueueResponse(4);
     mock_ch375QueueResponses(testData, 4);
     
@@ -346,8 +346,8 @@ ZTEST(ch375_transfers, test_bulk_transfer_out)
     
     // Successful OUT
     mock_ch375QueueStatus(0x00);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
-    mock_ch375QueueStatus(CH375_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
+    mock_ch375QueueStatus(CH37X_USB_INT_SUCCESS);
     
     int ret = ch375_hostBulkTransfer(&udev, 0x01, data, sizeof(data), &actualLen, 5000);
     

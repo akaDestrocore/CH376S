@@ -55,13 +55,13 @@ extern "C" {
     #define CH37X_DEFAULT_BAUDRATE      CH375_DEFAULT_BAUDRATE
     #define CH37X_WORK_BAUDRATE         CH375_WORK_BAUDRATE
     
-    #define CH37X_SUCCESS               CH375_SUCCESS
+    #define CH37X_SUCCESS               CH37X_SUCCESS
     #define CH37X_ERROR                 CH375_ERROR
     #define CH37X_PARAM_INVALID         CH375_PARAM_INVALID
     #define CH37X_TIMEOUT               CH375_TIMEOUT
     
-    #define CH37X_USB_MODE_SOF_AUTO     CH375_USB_MODE_SOF_AUTO
-    #define CH37X_USB_INT_SUCCESS       CH375_USB_INT_SUCCESS
+    #define CH37X_USB_MODE_SOF_AUTO     CH37X_USB_MODE_SOF_AUTO
+    #define CH37X_USB_INT_SUCCESS       CH37X_USB_INT_SUCCESS
     
     #define CH37X_A_USART_INDEX         CH375_A_USART_INDEX
     #define CH37X_B_USART_INDEX         CH375_B_USART_INDEX
@@ -96,6 +96,40 @@ static inline int ch37x_setUSBMode(CH37X_Context_t *pCtx, uint8_t mode) {
 
 static inline int ch37x_setBaudrate(CH37X_Context_t *pCtx, uint32_t baudrate) {
     return ch376s_setBaudrate(pCtx, baudrate);
+}
+
+static inline int ch37x_testConnect(CH37X_Context_t *pCtx, uint8_t *pConnStatus) {
+    return ch376s_testConnect(pCtx, pConnStatus);
+}
+
+static inline int ch37x_getDevSpeed(CH37X_Context_t *pCtx, uint8_t *pSpeed) {
+    return ch376s_getDevSpeed(pCtx, pSpeed);
+}
+
+static inline int ch37x_setDevSpeed(CH37X_Context_t *pCtx, uint8_t speed) {
+    return ch376s_setDevSpeed(pCtx, speed);
+}
+
+static inline int ch37x_setUSBAddr(CH37X_Context_t *pCtx, uint8_t addr) {
+    return ch376s_setUSBAddr(pCtx, addr);
+}
+
+static inline int ch37x_setRetry(CH37X_Context_t *pCtx, uint8_t times) {
+    return ch376s_setRetry(pCtx, times);
+}
+
+static inline int ch37x_sendToken(CH37X_Context_t *pCtx, uint8_t ep, bool tog,
+                                   uint8_t pid, uint8_t *pStatus) {
+    return ch376s_sendToken(pCtx, ep, tog, pid, pStatus);
+}
+
+static inline int ch37x_writeBlockData(CH37X_Context_t *pCtx, uint8_t *pBuff, uint8_t len) {
+    return ch376s_writeBlockData(pCtx, pBuff, len);
+}
+
+static inline int ch37x_readBlockData(CH37X_Context_t *pCtx, uint8_t *pBuff, 
+                                       uint8_t len, uint8_t *pActualLen) {
+    return ch376s_readBlockData(pCtx, pBuff, len, pActualLen);
 }
 
 #else /* CH375 */
