@@ -1,0 +1,115 @@
+cmake_minimum_required(VERSION 3.28.1)
+
+option(USE_CH376S "Use CH376S (8-bit UART) instead of CH375 (9-bit UART)" ON)
+
+# Device tree overlays
+if(BOARD STREQUAL "stm32f4_disco")
+    set(DTC_OVERLAY_FILE "${CMAKE_CURRENT_SOURCE_DIR}/boards/stm32f4_disco.overlay")
+elseif(BOARD MATCHES "^rpi_pico2")
+    set(DTC_OVERLAY_FILE "${CMAKE_CURRENT_SOURCE_DIR}/boards/rpi_pico2.overlay")
+elseif(BOARD MATCHES "^rpi_pico$")
+    set(DTC_OVERLAY_FILE "${CMAKE_CURRENT_SOURCE_DIR}/boards/rpi_pico.overlay")
+endif()
+
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(usb_hid_proxy)
+
+# Common source files
+target_sources(app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/src/hid_parser.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/src/hid_mouse.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/src/hid_keyboard.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/src/hid_output.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_hid_proxy.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/input_patterns.c
+)
+
+# Chip-specific UART implementation
+if(USE_CH376S)
+    message(STATUS "========================================")
+    message(STATUS "Building for CH376S (8-bit UART)")
+    message(STATUS "========================================")
+    
+    # Define preprocessor macro
+    target_compile_definitions(app PRIVATE USE_CH376S=1)
+    
+    # CH376S core files
+    target_sources(app PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s_uart.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_host.c
+    )
+    
+    # CH376S only supports RP2040/RP2350
+    if(CONFIG_SOC_RP2350A_M33 OR CONFIG_SOC_RP2040)
+        target_sources(app PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/src/ch376s_uart_rp2.c
+        )
+        
+        # PIO support
+        zephyr_library_include_directories(
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_pio/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_clocks/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_gpio/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/common/hardware_claim/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/pico_base/include
+        )
+        message(STATUS "Platform: ${BOARD} (CH376S with PIO)")
+    else()
+        message(FATAL_ERROR "CH376S only supported on RP2040/RP2350 platforms!")
+    endif()
+    
+else()
+    message(STATUS "========================================")
+    message(STATUS "Building for CH375 (9-bit UART)")
+    message(STATUS "========================================")
+    
+    # CH375 core files
+    target_sources(app PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_host.c
+    )
+    
+    # Platform-specific UART implementation
+    if(CONFIG_SOC_SERIES_STM32F4X)
+        target_sources(app PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart_stm32.c
+        )
+        
+        # STM32 LL drivers
+        zephyr_library_include_directories(
+            ${ZEPHYR_BASE}/modules/hal/stm32/stm32cube/stm32f4xx/drivers/include
+            ${ZEPHYR_BASE}/modules/hal/stm32/stm32cube/stm32f4xx/soc
+        )
+        message(STATUS "Platform: STM32F4 (CH375 with manual UART)")
+        
+    elseif(CONFIG_SOC_RP2350A_M33 OR CONFIG_SOC_RP2040)
+        target_sources(app PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/src/ch375_uart_rp2.c
+        )
+        
+        # PIO support
+        zephyr_library_include_directories(
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_pio/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_clocks/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/hardware_gpio/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/common/hardware_claim/include
+            ${ZEPHYR_BASE}/../modules/hal/rpi_pico/src/rp2_common/pico_base/include
+        )
+        message(STATUS "Platform: ${BOARD} (CH375 with PIO)")
+    else()
+        message(FATAL_ERROR "Unsupported platform for CH375!")
+    endif()
+endif()
+
+# Common include directories
+target_include_directories(app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/hid/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch375/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ch376/include
+)
+
+message(STATUS "========================================")
