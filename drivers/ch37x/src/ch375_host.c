@@ -35,7 +35,7 @@ static int get_config_descriptor(struct USB_Device_t *pUdev, uint8_t *pBuff, uin
 static int parse_config_descriptor(struct USB_Device_t *pUdev);
 static void parse_interface_descriptor(struct USB_Device_t *pUdev, struct usb_if_descriptor *pDesc);
 static void parse_endpoint_descriptor(struct USB_Interface_t *pIfc, struct usb_ep_descriptor *pDesc);
-static int reset_dev(struct ch375_Context_t *pCtx);
+static int reset_dev(ch37x_Context_t *pCtx);
 static int get_endpoint(struct USB_Device_t *pUdev, uint8_t epAddr, struct USB_Endpoint_t **ppEP);
 
 /**
@@ -44,7 +44,7 @@ static int get_endpoint(struct USB_Device_t *pUdev, uint8_t epAddr, struct USB_E
   * @param baudrate Baud rate to communicate with baudrate
   * @retval 0 on success, error code otherwise
   */
-int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate) {
+int ch375_hostInit(ch37x_Context_t *pCtx, uint32_t baudrate) {
     
     int ret = -1;
 
@@ -84,7 +84,7 @@ int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate) {
   * @param timeout Timeout in milliseconds
   * @retval 0 on success, error code otherwise
   */
-int ch375_hostWaitDeviceConnect(struct ch375_Context_t *pCtx, uint32_t timeout) {
+int ch375_hostWaitDeviceConnect(ch37x_Context_t *pCtx, uint32_t timeout) {
 
     int ret = -1;
     uint8_t conn_status;
@@ -111,7 +111,7 @@ int ch375_hostWaitDeviceConnect(struct ch375_Context_t *pCtx, uint32_t timeout) 
   * @param pUdev Pointer to the device structure
   * @retval 0 on success, error code otherwise
   */
-int ch375_hostUdevOpen(struct ch375_Context_t *pCtx, struct USB_Device_t *pUdev) {
+int ch375_hostUdevOpen(ch37x_Context_t *pCtx, struct USB_Device_t *pUdev) {
 
     int ret = -1;
     int i = 0;
@@ -311,7 +311,7 @@ int ch375_hostResetDev(struct USB_Device_t *pUdev) {
     int ret = -1;
     uint8_t conn_status;
     uint8_t speed;
-    struct ch375_Context_t *pCtx;
+    ch37x_Context_t *pCtx;
 
     if (NULL == pUdev || NULL == pUdev->ctx) {
         LOG_ERR("Invalid device or context");
@@ -405,7 +405,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
     uint16_t wValue, uint16_t wIndex, uint8_t *pData, uint16_t wLength, int *pActualLen, uint32_t timeout) {
 
     int ret = -1;
-    struct ch375_Context_t *pCtx;
+    ch37x_Context_t *pCtx;
     uint8_t setupBuff[CONTROL_SETUP_SIZE];
     int totalReceived = 0;
     bool toggle = false;
@@ -691,7 +691,7 @@ int ch375_hostControlTransfer(struct USB_Device_t *pUdev, uint8_t reqType, uint8
   */
 int ch375_hostBulkTransfer(struct USB_Device_t *pUdev, uint8_t ep, uint8_t *pData, int len, int *pActualLen, uint32_t timeout) {
     int ret = -1;
-    struct ch375_Context_t *pCtx;
+    ch37x_Context_t *pCtx;
     struct USB_Endpoint_t *endpoint = NULL;
     int resiLen = len;
     int offset = 0;
@@ -985,7 +985,7 @@ static void parse_endpoint_descriptor(struct USB_Interface_t *pIfc, struct usb_e
     pIfc->endpoint_count++;
 }
 
-static int reset_dev(struct ch375_Context_t *pCtx) {
+static int reset_dev(ch37x_Context_t *pCtx) {
     
     int ret = -1;
 

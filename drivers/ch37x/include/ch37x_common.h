@@ -117,9 +117,9 @@ extern "C" {
     #define CH37X_USB_INT_BUF_OVER      CH376S_USB_INT_BUF_OVER
     #define CH37X_USB_INT_USB_READY     CH376S_USB_INT_USB_READY
 #else
-    #define CH37X_USB_INT_SUCCESS       CH37X_USB_INT_SUCCESS
+    #define CH37X_USB_INT_SUCCESS       CH375_USB_INT_SUCCESS
     #define CH37X_USB_INT_CONNECT       CH375_USB_INT_CONNECT
-    #define CH37X_USB_INT_DISCONNECT    CH37X_USB_INT_DISCONNECT
+    #define CH37X_USB_INT_DISCONNECT    CH375_USB_INT_DISCONNECT
     #define CH37X_USB_INT_BUF_OVER      CH375_USB_INT_BUF_OVER
     #define CH37X_USB_INT_USB_READY     CH375_USB_INT_USB_READY
 #endif
@@ -133,8 +133,8 @@ extern "C" {
     #define CH37X_RETRY_TIMES_INFINITY  CH376S_RETRY_TIMES_INFINITY
 #else
     #define CH37X_RETRY_TIMES_ZERO      CH375_RETRY_TIMES_ZERO
-    #define CH37X_RETRY_TIMES_2MS       CH37X_RETRY_TIMES_2MS
-    #define CH37X_RETRY_TIMES_INFINITY  CH37X_RETRY_TIMES_INFINITY
+    #define CH37X_RETRY_TIMES_2MS       CH375_RETRY_TIMES_2MS
+    #define CH37X_RETRY_TIMES_INFINITY  CH375_RETRY_TIMES_INFINITY
 #endif
 
 /* ==========================================================================
@@ -147,7 +147,7 @@ extern "C" {
 #else
     #define CH37X_CMD(x)                CH375_CMD(x)
     #define CH37X_DATA(x)               CH375_DATA(x)
-    #define CH37X_PID2STATUS(x)         CH37X_PID2STATUS(x)
+    #define CH37X_PID2STATUS(x)         CH375_PID2STATUS(x)
 #endif
 
 /* ==========================================================================

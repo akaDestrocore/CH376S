@@ -51,7 +51,7 @@ typedef struct {
     const char *name;
     struct gpio_dt_spec intGpio;
 
-    struct ch375_Context_t *ch375Ctx;
+    ch37x_Context_t *ch37xCtx;
     struct USB_Device_t usbDev;
     struct USBHID_Device_t hidDev;
     union {
@@ -139,12 +139,12 @@ int main(void)
 #endif
 
     // Initialize CH375 USB host controllers
-    ret = initCh375Device(&gDeviceInputs[0], "CH375A", CH375_A_USART_INDEX, NULL, IFACE_MOUSE);
+    ret = initCh375Device(&gDeviceInputs[0], "CH375A", CH37X_A_USART_INDEX, NULL, IFACE_MOUSE);
     if (0 != ret) {
         return ret;
     }
 
-    ret = initCh375Device(&gDeviceInputs[1], "CH375B", CH375_B_USART_INDEX, NULL, IFACE_KEYBOARD);
+    ret = initCh375Device(&gDeviceInputs[1], "CH375B", CH37X_B_USART_INDEX, NULL, IFACE_KEYBOARD);
     if (0 != ret) {
         return ret;
     }
@@ -238,19 +238,19 @@ static int initCh375Device(DeviceInput_t *pDevIn, const char *pName, int usartIn
     pDevIn->reportIntervalMs = DEFAULT_REPORT_INTERVAL_MS;
     pDevIn->isConnected = false;
 
-    ret = ch37x_hwInitManual(pName, usartIndex, pIntGpio, CH37X_DEFAULT_BAUDRATE, &pDevIn->ch375Ctx);
+    ret = ch37x_hwInitManual(pName, usartIndex, pIntGpio, CH37X_DEFAULT_BAUDRATE, &pDevIn->ch37xCtx);
     if (ret < 0) {
         LOG_ERR("[ FAILED ] %s: Hardware init failed: %d", pName, ret);
         return ret;
     }
 
-    ret = ch375_hostInit(pDevIn->ch375Ctx, CH37X_WORK_BAUDRATE);
+    ret = ch375_hostInit(pDevIn->ch37xCtx, CH37X_WORK_BAUDRATE);
     if (CH37X_HOST_SUCCESS != ret) {
         LOG_ERR("[ FAILED ] %s: CH375 host init failed: %d", pName, ret);
         return -EIO;
     }
 
-    ret = ch37x_hwSetBaudrate(pDevIn->ch375Ctx, CH37X_WORK_BAUDRATE);
+    ret = ch37x_hwSetBaudrate(pDevIn->ch37xCtx, CH37X_WORK_BAUDRATE);
     if (ret < 0) {
         LOG_ERR("%s: Baudrate switch failed: %d", pName, ret);
         return ret;
@@ -271,7 +271,7 @@ static int openDeviceInput(DeviceInput_t *pDevIn) {
 
     LOG_INF("%s: Opening USB device...", pDevIn->name);
 
-    ret = ch375_hostUdevOpen(pDevIn->ch375Ctx, &pDevIn->usbDev);
+    ret = ch375_hostUdevOpen(pDevIn->ch37xCtx, &pDevIn->usbDev);
     if (CH37X_HOST_SUCCESS != ret) {
         LOG_ERR("%s: Failed to open USB device: %d", pDevIn->name, ret);
         return CH37X_HOST_ERROR;
@@ -339,7 +339,7 @@ static void waitAllDevicesConnect(void) {
             }
 
             // 500ms timeout
-            ret = ch375_hostWaitDeviceConnect(pDevIn->ch375Ctx, 500);
+            ret = ch375_hostWaitDeviceConnect(pDevIn->ch37xCtx, 500);
             if (CH37X_HOST_SUCCESS == ret) {
                 LOG_INF("[ OK ] %s: Device connected", pDevIn->name);
                 pDevIn->isConnected = true;

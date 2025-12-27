@@ -112,7 +112,7 @@ struct USB_Interface_t {
  * @brief USB Device Structure
  */
 struct USB_Device_t {
-    struct ch375_Context_t *ctx;
+    ch37x_Context_t *ctx;
 
     uint16_t vendor_id;
     uint16_t product_id;
@@ -147,9 +147,9 @@ struct USB_HID_Descriptor_t {
 /**
  * @brief Function prototypes
  */
-int ch375_hostInit(struct ch375_Context_t *pCtx, uint32_t baudrate);
-int ch375_hostWaitDeviceConnect(struct ch375_Context_t *pCtx, uint32_t timeout);
-int ch375_hostUdevOpen(struct ch375_Context_t *pCtx, struct USB_Device_t *pUdev);
+int ch375_hostInit(ch37x_Context_t *pCtx, uint32_t baudrate);
+int ch375_hostWaitDeviceConnect(ch37x_Context_t *pCtx, uint32_t timeout);
+int ch375_hostUdevOpen(ch37x_Context_t *pCtx, struct USB_Device_t *pUdev);
 void ch375_hostUdevClose(struct USB_Device_t *pUdev);
 int ch375_hostResetDev(struct USB_Device_t *pUdev);
 
